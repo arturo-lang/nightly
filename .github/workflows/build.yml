@@ -2,8 +2,16 @@ name: "Release"
 
 on:
   push:
-    tags:
-      - 'v*.*.*'
+    branches:
+      - '**'
+      - actions
+
+  pull_request:
+    branches:
+      - '*'
+
+  schedule:
+    - cron: '0 0 * * *'
 
 env:
   app-name: arturo
