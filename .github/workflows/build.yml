@@ -114,16 +114,26 @@ jobs:
       - name: Display structure of downloaded files
         run: ls -R
 
+      - name: Get current date
+        run: echo $(date -u "+%F") >> currentDate
+
+      - name: "Read date"
+        uses: pCYSl5EDgo/cat@master
+        id: currentDate
+        with:
+          path: currentDate
+          trim: true
+
       - name: Create Release
         id: create-release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
+          tag_name: tag-${{ steps.currentDate.outputs.text }}
+          release_name: Last nightly @ ${{ steps.currentDate.outputs.text }}
           body: |
-            ${{ github.ref }}
+            Nightly build on ${{ steps.currentDate.outputs.text }}
           draft: false
           prerelease: false
 
