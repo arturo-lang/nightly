@@ -131,7 +131,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: tag-${{ steps.currentDate.outputs.text }}
-          release_name: Last nightly @ ${{ steps.currentDate.outputs.text }}
+          release_name: Latest nightly @ ${{ steps.currentDate.outputs.text }}
           body: |
             Nightly build on ${{ steps.currentDate.outputs.text }}
           draft: false
