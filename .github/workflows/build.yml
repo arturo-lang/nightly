@@ -1,0 +1,129 @@
+name: "Release"
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+env:
+  app-name: arturo
+
+defaults:
+  run:
+    shell: bash -l {0}
+
+jobs:
+  package:
+    name: "Package"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+        version:
+          - mini
+          - full
+
+    steps:
+      - name: "Cancel similar actions in progress"
+        uses: styfle/cancel-workflow-action@0.6.0
+        with:
+          access_token: ${{ github.token }}
+
+      - name: "Checkout"
+        uses: actions/checkout@main
+        with:
+          repository: arturo-lang/arturo
+          submodules: recursive
+
+      - name: "Get version"
+        uses: pCYSl5EDgo/cat@master
+        id: versionNumber
+        with:
+          path: version/version
+          trim: true
+
+      - name: Install Nim
+        run: |
+          wget -qO - https://nim-lang.org/choosenim/init.sh | bash -s -- -y
+          echo "$HOME/.nimble/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        if: matrix.version == 'full' && matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install libwebkit2gtk-4.0-dev
+
+      - name: Verify dependecies
+        run: |
+          nim --version
+
+      - name: Build Arturo
+        run: |
+          ./install ${{ matrix.version }} log
+          echo "$HOME/.arturo/bin" >> $GITHUB_PATH
+
+      - name: Create artifact
+        run: |
+          install -m 0755 ./bin/${{ env.app-name }} .
+          tar czf ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{runner.os}}-${{matrix.version}}.tar.gz ${{ env.app-name }} README.md LICENSE
+
+      - name: Upload Artifact
+        uses: 'actions/upload-artifact@v1'
+        with:
+          name: ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{runner.os}}-${{matrix.version}}.tar.gz
+          path: ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{runner.os}}-${{matrix.version}}.tar.gz
+
+  upload:
+    name: "Upload"
+    runs-on: ubuntu-latest
+    if: ${{ always() }}
+    needs: [package]
+    steps:
+      - name: "Cancel similar actions in progress"
+        uses: styfle/cancel-workflow-action@0.6.0
+        with:
+          access_token: ${{ github.token }}
+
+      - name: "Checkout"
+        uses: actions/checkout@main
+        with:
+          repository: arturo-lang/arturo
+          submodules: recursive
+
+      - name: "Get version"
+        uses: pCYSl5EDgo/cat@master
+        id: versionNumber
+        with:
+          path: version/version
+          trim: true
+
+      - uses: actions/download-artifact@v2
+        with:
+          path: ./assets
+      
+      - name: Display structure of downloaded files
+        run: ls -R
+
+      - name: Create Release
+        id: create-release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
+          body: |
+            ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Assets
+        id: upload-release-assets
+        uses: dwenegar/upload-release-assets@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          release_id: ${{ steps.create-release.outputs.id }}
+          assets_path: ./assets
