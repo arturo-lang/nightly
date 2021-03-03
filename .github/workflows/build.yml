@@ -53,6 +53,16 @@ jobs:
           path: version/version
           trim: true
 
+      - name: Get current date
+        run: echo $(date -u "+%F") >> currentDate
+
+      - name: "Read date"
+        uses: pCYSl5EDgo/cat@master
+        id: currentDate
+        with:
+          path: currentDate
+          trim: true
+
       - name: Install Nim
         run: |
           wget -qO - https://nim-lang.org/choosenim/init.sh | bash -s -- -y
@@ -77,13 +87,74 @@ jobs:
       - name: Create artifact
         run: |
           install -m 0755 ./bin/${{ env.app-name }} .
-          tar czf ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{runner.os}}-${{matrix.version}}.tar.gz ${{ env.app-name }} README.md LICENSE
+          tar czf ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{ steps.currentDate.outputs.text }}-${{runner.os}}-${{matrix.version}}.tar.gz ${{ env.app-name }} README.md LICENSE
 
       - name: Upload Artifact
         uses: 'actions/upload-artifact@v1'
         with:
-          name: ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{runner.os}}-${{matrix.version}}.tar.gz
-          path: ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{runner.os}}-${{matrix.version}}.tar.gz
+          name: ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{ steps.currentDate.outputs.text }}-${{runner.os}}-${{matrix.version}}.tar.gz
+          path: ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{ steps.currentDate.outputs.text }}-${{runner.os}}-${{matrix.version}}.tar.gz
+
+  freebsd:
+    name: "Package FreeBSD"
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        os:
+          - freebsd-latest
+        version:
+          - mini
+
+    steps:
+      - name: "Cancel similar actions in progress"
+        uses: styfle/cancel-workflow-action@0.6.0
+        with:
+          access_token: ${{ github.token }}
+
+      - name: "Checkout"
+        uses: actions/checkout@main
+        with:
+          repository: arturo-lang/arturo
+          submodules: recursive
+
+      - name: "Get version"
+        uses: pCYSl5EDgo/cat@master
+        id: versionNumber
+        with:
+          path: version/version
+          trim: true
+
+      - name: Get current date
+        run: echo $(date -u "+%F") >> currentDate
+
+      - name: "Read date"
+        uses: pCYSl5EDgo/cat@master
+        id: currentDate
+        with:
+          path: currentDate
+          trim: true
+
+      - name: Setup environment & Build Arturo
+        id: test
+        uses: vmactions/freebsd-vm@v0.1.2
+        with:
+          usesh: true
+          prepare: pkg install -y nim gmp bash databases/sqlite3
+          run: |
+            ./install mini
+            export PATH="$HOME/.arturo/bin:$PATH"
+            arturo tools/tester.art
+
+      - name: Create artifact
+        run: |
+          install -m 0755 ./bin/${{ env.app-name }} .
+          tar czf ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{ steps.currentDate.outputs.text }}-${{runner.os}}-${{matrix.version}}.tar.gz ${{ env.app-name }} README.md LICENSE
+
+      - name: Upload Artifact
+        uses: 'actions/upload-artifact@v1'
+        with:
+          name: ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{ steps.currentDate.outputs.text }}-${{runner.os}}-${{matrix.version}}.tar.gz
+          path: ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{ steps.currentDate.outputs.text }}-${{runner.os}}-${{matrix.version}}.tar.gz
 
   windows:
     name: "Package Windows"
@@ -112,6 +183,16 @@ jobs:
         id: versionNumber
         with:
           path: version/version
+          trim: true
+
+      - name: Get current date
+        run: echo $(date -u "+%F") >> currentDate
+
+      - name: "Read date"
+        uses: pCYSl5EDgo/cat@master
+        id: currentDate
+        with:
+          path: currentDate
           trim: true
 
       - uses: msys2/setup-msys2@v2
@@ -148,19 +229,22 @@ jobs:
 
       - name: Create artifact
         run: |
-          tar czf ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{runner.os}}-${{matrix.version}}.tar.gz bin/${{ env.app-name }}.exe README.md LICENSE
+          tar czf ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{ steps.currentDate.outputs.text }}-${{runner.os}}-${{matrix.version}}.tar.gz bin/${{ env.app-name }}.exe README.md LICENSE
 
       - name: Upload Artifact
         uses: 'actions/upload-artifact@v1'
         with:
-          name: ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{runner.os}}-${{matrix.version}}.tar.gz
-          path: ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{runner.os}}-${{matrix.version}}.tar.gz
+          name: ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{ steps.currentDate.outputs.text }}-${{runner.os}}-${{matrix.version}}.tar.gz
+          path: ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{ steps.currentDate.outputs.text }}-${{runner.os}}-${{matrix.version}}.tar.gz
 
   upload:
     name: "Upload"
     runs-on: ubuntu-latest
     if: ${{ always() }}
-    needs: [unix,windows]
+    needs: 
+      - unix
+      - freebsd
+      - unix
     steps:
       - name: "Cancel similar actions in progress"
         uses: styfle/cancel-workflow-action@0.6.0
