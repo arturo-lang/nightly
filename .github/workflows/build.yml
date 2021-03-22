@@ -117,6 +117,7 @@ jobs:
       - name: "Checkout"
         uses: actions/checkout@main
         with:
+          repository: arturo-lang/arturo
           submodules: recursive
 
       - name: "Get version"
