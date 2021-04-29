@@ -1,0 +1,3 @@
+[submodule "arturo"]
+	path = arturo
+	url = https://github.com/arturo-lang/arturo.git
