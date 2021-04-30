@@ -343,7 +343,7 @@ jobs:
           ./install mini
 
           mv bin/arturo.exe arturo.exe
-
+ 
       - name: Create artifact
         run: |
           7z a ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{ steps.currentDate.outputs.text }}-${{runner.os}}-${{matrix.version}}.zip ${{ env.app-name }}.exe README.md LICENSE *.dll
