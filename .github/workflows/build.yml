@@ -274,7 +274,7 @@ jobs:
           update: true
           install: 'git base-devel'
 
-            - name: Install dependencies + Build Arturo (full)
+      - name: Install dependencies + Build Arturo (full)
         if: matrix.version == 'full'
         shell: msys2 {0}
         run: |
