@@ -215,7 +215,7 @@ jobs:
           usesh: true
           prepare: pkg install -y nim gmp mpfr bash databases/sqlite3
           run: |
-            ./build.nims install ${{ matrix.version }} ${{ matrix.arch }} log
+            ./build.nims --mode ${{ matrix.version }} --arch ${{ matrix.arch }} --install --log
             export PATH="$HOME/.arturo/bin:$PATH"
 
       - name: Create artifact
