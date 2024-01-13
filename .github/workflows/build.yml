@@ -468,7 +468,7 @@ jobs:
 
       - name: Build Arturo
         run: |
-          ./build.nims --install --mode web
+          ./build.nims --mode web --install --log
           echo "$HOME/.arturo/bin" >> $GITHUB_PATH
 
       - name: Create artifact
