@@ -266,7 +266,7 @@ jobs:
 
       - name: Package artifact
         run: |
-          7z a ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{ steps.currentDate.outputs.text }}-${{runner.os}}-${{matrix.version}}.zip arturo-${{matrix.version}}-${{matrix.os}}/*
+          7z a ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{ steps.currentDate.outputs.text }}-${{runner.os}}-${{matrix.version}}.zip bin
 
       - name: Upload Artifact
         uses: 'actions/upload-artifact@v1'
