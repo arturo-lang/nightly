@@ -355,7 +355,7 @@ jobs:
       - unix
       - freebsd
       - windows
-      - msys2
+      # - msys2
       - web
     steps:
       - name: "Cancel similar actions in progress"
