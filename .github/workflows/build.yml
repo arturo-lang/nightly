@@ -294,7 +294,7 @@ jobs:
 
           nim --version
 
-          ./build.nims install ${{ matrix.version }} log
+          ./build.nims --mode ${{ matrix.version }} --install --log
 
       - name: Install dependencies + Build Arturo (mini)
         if: matrix.version == 'mini'
@@ -310,7 +310,7 @@ jobs:
 
           export PATH="${{ github.workspace }}/nim/nim-1.6.8/bin":$PATH
 
-          ./build.nims install ${{ matrix.version }} log
+          ./build.nims --mode ${{ matrix.version }} --install --log
 
       - name: Create artifact (full)
         if: matrix.version == 'full'
@@ -423,7 +423,7 @@ jobs:
 
           nim --version
 
-          ./build.nims install ${{ matrix.version }} log
+          ./build.nims --mode ${{ matrix.version }} --install --log
 
       - name: Install dependencies + Build Arturo (mini)
         if: matrix.version == 'mini'
@@ -439,7 +439,7 @@ jobs:
 
           export PATH="${{ github.workspace }}/nim/nim-1.6.8/bin":$PATH
 
-          ./build.nims install ${{ matrix.version }} log
+          ./build.nims --mode ${{ matrix.version }} --install --log
 
       - name: Create artifact (full)
         if: matrix.version == 'full'
