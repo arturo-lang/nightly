@@ -352,7 +352,7 @@ jobs:
       - freebsd
       - windows
       # - msys2
-      - web
+      # - web
     steps:
       - name: "Cancel similar actions in progress"
         uses: styfle/cancel-workflow-action@0.6.0
