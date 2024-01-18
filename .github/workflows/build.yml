@@ -81,7 +81,7 @@ jobs:
       - name: Build Arturo
         run: |
           export MACOSX_DEPLOYMENT_TARGET=10.10
-          ./build.nims install ${{ matrix.version }} log
+          ./build.nims --mode ${{ matrix.version }} --install --log
           echo "$HOME/.arturo/bin" >> $GITHUB_PATH
 
       - name: Create artifact
@@ -94,80 +94,6 @@ jobs:
         with:
           name: ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{ steps.currentDate.outputs.text }}-${{runner.os}}-${{matrix.version}}.tar.gz
           path: ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{ steps.currentDate.outputs.text }}-${{runner.os}}-${{matrix.version}}.tar.gz
-
-  raspberry:
-    name: "Package Raspberry"
-    runs-on: ubuntu-20.04
-    strategy:
-      matrix:
-        os:
-          - Raspberry
-        arch:
-          - arm
-          - arm64
-        version:
-          - mini
-
-    steps:
-      - name: "Cancel similar actions in progress"
-        uses: styfle/cancel-workflow-action@0.6.0
-        with:
-          access_token: ${{ github.token }}
-
-      - name: "Checkout"
-        uses: actions/checkout@main
-        with:
-          repository: arturo-lang/arturo
-          submodules: recursive
-
-      - name: "Get version"
-        uses: pCYSl5EDgo/cat@master
-        id: versionNumber
-        with:
-          path: version/version
-          trim: true
-
-      - name: Get current date
-        run: echo $(date -u "+%F") >> currentDate
-
-      - name: "Read date"
-        uses: pCYSl5EDgo/cat@master
-        id: currentDate
-        with:
-          path: currentDate
-          trim: true
-
-      - name: Install Nim
-        run: |
-          wget -qO - https://nim-lang.org/choosenim/init.sh | bash -s -- -y
-          echo "$HOME/.nimble/bin" >> $GITHUB_PATH
-
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install gcc-arm-linux-gnueabihf gcc-aarch64-linux-gnu
-
-      - name: Verify dependecies
-        run: |
-          nim --version
-
-      - name: Build Arturo
-        run: |
-          export MACOSX_DEPLOYMENT_TARGET=10.10
-          ./build.nims install ${{ matrix.version }} ${{ matrix.arch }} log
-          echo "$HOME/.arturo/bin" >> $GITHUB_PATH
-          file bin/arturo
-
-      - name: Create artifact
-        run: |
-          install -m 0755 ./bin/${{ env.app-name }} .
-          tar czf ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{ steps.currentDate.outputs.text }}-${{matrix.os}}-${{matrix.arch}}-${{matrix.version}}.tar.gz ${{ env.app-name }} README.md LICENSE
-
-      - name: Upload Artifact
-        uses: 'actions/upload-artifact@v1'
-        with:
-          name: ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{ steps.currentDate.outputs.text }}-${{matrix.os}}-${{matrix.arch}}-${{matrix.version}}.tar.gz
-          path: ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{ steps.currentDate.outputs.text }}-${{matrix.os}}-${{matrix.arch}}-${{matrix.version}}.tar.gz
 
   freebsd:
     name: "Package FreeBSD"
@@ -215,7 +141,7 @@ jobs:
           usesh: true
           prepare: pkg install -y nim gmp mpfr bash databases/sqlite3
           run: |
-            ./build.nims install ${{ matrix.version }} ${{ matrix.arch }} log
+            ./build.nims --mode ${{ matrix.version }} --arch ${{ matrix.arch }} --install --log
             export PATH="$HOME/.arturo/bin:$PATH"
 
       - name: Create artifact
@@ -278,23 +204,23 @@ jobs:
         if: matrix.version == 'full'
         shell: msys2 {0}
         run: |
-          pacman --noconfirm -S p7zip mingw-w64-x86_64-toolchain
+          pacman --noconfirm -S p7zip mingw-w64-x86_64-toolchain mingw-w64-x86_64-mpfr
           mkdir dist
           mkdir nim
           curl -L https://nim-lang.org/download/dlls.zip -o dist/dlls.zip
           curl -L https://arturo-lang.s3.amazonaws.com/extra-dlls.zip -o dist/extradlls.zip
-          curl -L https://nim-lang.org/download/nim-1.6.8_x64.zip -o dist/nim.zip
+          curl -L https://nim-lang.org/download/nim-2.0.0_x64.zip -o dist/nim.zip
           7z x dist/dlls.zip -obin
           7z x dist/extradlls.zip -obin
           7z x dist/nim.zip -onim
 
           cp src/extras/webview/deps/dlls/x64/*.dll bin
 
-          export PATH="${{ github.workspace }}/nim/nim-1.6.8/bin":$PATH
+          export PATH="${{ github.workspace }}/nim/nim-2.0.0/bin":$PATH
 
           nim --version
 
-          ./build.nims install ${{ matrix.version }} log
+          ./build.nims --mode ${{ matrix.version }} --install --log
 
       - name: Install dependencies + Build Arturo (mini)
         if: matrix.version == 'mini'
@@ -304,53 +230,43 @@ jobs:
           mkdir dist
           mkdir nim
           curl -L https://nim-lang.org/download/dlls.zip -o dist/dlls.zip
-          curl -L https://nim-lang.org/download/nim-1.6.8_x64.zip -o dist/nim.zip
+          curl -L https://nim-lang.org/download/nim-2.0.0_x64.zip -o dist/nim.zip
           7z x dist/dlls.zip -obin
           7z x dist/nim.zip -onim
 
-          export PATH="${{ github.workspace }}/nim/nim-1.6.8/bin":$PATH
+          export PATH="${{ github.workspace }}/nim/nim-2.0.0/bin":$PATH
 
-          ./build.nims install ${{ matrix.version }} log
+          ./build.nims --mode ${{ matrix.version }} --install --log
 
       - name: Create artifact (full)
         if: matrix.version == 'full'
         run: |
-          mkdir arturo-${{matrix.version}}-${{matrix.os}}
-
-          curl -L https://arturo-lang.s3.amazonaws.com/libcrypto-1_1-x64.dll -o libcrypto-1_1-x64.dll
-          curl -L https://arturo-lang.s3.amazonaws.com/libssl-1_1-x64.dll -o libssl-1_1-x64.dll
-          curl -L https://arturo-lang.s3.amazonaws.com/pcre64.dll -o pcre64.dll
-          curl -L https://arturo-lang.s3.amazonaws.com/sqlite3_64.dll -o sqlite3_64.dll
+          curl -L https://arturo-lang.s3.amazonaws.com/libwinpthread-1.dll -o libwinpthread-1.dll
           curl -L https://arturo-lang.s3.amazonaws.com/libgmp-10.dll -o libgmp-10.dll
+          curl -L https://arturo-lang.s3.amazonaws.com/libmpfr-6.dll -o libmpfr-6.dll
+          curl -L https://arturo-lang.s3.amazonaws.com/sqlite3_64.dll -o sqlite3_64.dll
+          curl -L https://arturo-lang.s3.amazonaws.com/libgcc_s_seh-1.dll -o libgcc_s_seh-1.dll
+          curl -L https://arturo-lang.s3.amazonaws.com/pcre64.dll -o pcre64.dll
+          curl -L https://curl.se/ca/cacert.pem -o cacert.pem
 
-          cp *.dll arturo-${{matrix.version}}-${{matrix.os}}
-          cp src/extras/webview/deps/dlls/x64/webview.dll arturo-${{matrix.version}}-${{matrix.os}}
-          cp src/extras/webview/deps/dlls/x64/WebView2Loader.dll arturo-${{matrix.version}}-${{matrix.os}}
-
-          cp bin/arturo.exe arturo-${{matrix.version}}-${{matrix.os}}
-          cp README.md arturo-${{matrix.version}}-${{matrix.os}}
-          cp LICENSE arturo-${{matrix.version}}-${{matrix.os}}
-          cp *.dll arturo-${{matrix.version}}-${{matrix.os}}
+          cp *.dll bin
+          cp *.pem bin
+          cp src/extras/webview/deps/dlls/x64/webview.dll bin
+          cp src/extras/webview/deps/dlls/x64/WebView2Loader.dll bin
 
       - name: Create artifact (mini)
         if: matrix.version == 'mini'
-        run: |
-          mkdir arturo-${{matrix.version}}-${{matrix.os}}
-
-          curl -L https://arturo-lang.s3.amazonaws.com/libcrypto-1_1-x64.dll -o libcrypto-1_1-x64.dll
-          curl -L https://arturo-lang.s3.amazonaws.com/libssl-1_1-x64.dll -o libssl-1_1-x64.dll
+        run: |            
+          curl -L https://arturo-lang.s3.amazonaws.com/libwinpthread-1.dll -o libwinpthread-1.dll
           curl -L https://arturo-lang.s3.amazonaws.com/pcre64.dll -o pcre64.dll
+          curl -L https://curl.se/ca/cacert.pem -o cacert.pem
 
-          cp *.dll arturo-${{matrix.version}}-${{matrix.os}}
-
-          cp bin/arturo.exe arturo-${{matrix.version}}-${{matrix.os}}
-          cp README.md arturo-${{matrix.version}}-${{matrix.os}}
-          cp LICENSE arturo-${{matrix.version}}-${{matrix.os}}
-          cp *.dll arturo-${{matrix.version}}-${{matrix.os}}
+          cp *.dll bin
+          cp *.pem bin
 
       - name: Package artifact
         run: |
-          7z a ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{ steps.currentDate.outputs.text }}-${{runner.os}}-${{matrix.version}}.zip arturo-${{matrix.version}}-${{matrix.os}}/*
+          7z a ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{ steps.currentDate.outputs.text }}-${{runner.os}}-${{matrix.version}}.zip bin
 
       - name: Upload Artifact
         uses: 'actions/upload-artifact@v1'
@@ -358,203 +274,74 @@ jobs:
           name: ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{ steps.currentDate.outputs.text }}-${{runner.os}}-${{matrix.version}}.zip
           path: ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{ steps.currentDate.outputs.text }}-${{runner.os}}-${{matrix.version}}.zip
 
-  msys2:
-    name: "Package Windows' Msys2"
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os:
-          - windows-latest
-        version:
-          - mini
-          - full
+  # web:
+  #   name: "Package Web"
+  #   runs-on: ${{ matrix.os }}
+  #   strategy:
+  #     matrix:
+  #       os:
+  #         - ubuntu-latest
+  #       version:
+  #         - mini
 
-    steps:
-      - name: "Cancel similar actions in progress"
-        uses: styfle/cancel-workflow-action@0.6.0
-        with:
-          access_token: ${{ github.token }}
+  #   steps:
+  #     - name: "Cancel similar actions in progress"
+  #       uses: styfle/cancel-workflow-action@0.6.0
+  #       with:
+  #         access_token: ${{ github.token }}
 
-      - name: "Checkout"
-        uses: actions/checkout@main
-        with:
-          repository: arturo-lang/arturo
-          submodules: recursive
+  #     - name: "Checkout"
+  #       uses: actions/checkout@main
+  #       with:
+  #         repository: arturo-lang/arturo
+  #         submodules: recursive
 
-      - name: "Get version"
-        uses: pCYSl5EDgo/cat@master
-        id: versionNumber
-        with:
-          path: version/version
-          trim: true
+  #     - name: "Get version"
+  #       uses: pCYSl5EDgo/cat@master
+  #       id: versionNumber
+  #       with:
+  #         path: version/version
+  #         trim: true
 
-      - name: Get current date
-        run: echo $(date -u "+%F") >> currentDate
+  #     - name: Get current date
+  #       run: echo $(date -u "+%F") >> currentDate
 
-      - name: "Read date"
-        uses: pCYSl5EDgo/cat@master
-        id: currentDate
-        with:
-          path: currentDate
-          trim: true
+  #     - name: "Read date"
+  #       uses: pCYSl5EDgo/cat@master
+  #       id: currentDate
+  #       with:
+  #         path: currentDate
+  #         trim: true
 
-      - uses: msys2/setup-msys2@v2
-        with:
-          update: true
-          install: 'git base-devel'
+  #     - name: Install Nim
+  #       run: |
+  #         wget -qO - https://nim-lang.org/choosenim/init.sh | bash -s -- -y
+  #         echo "$HOME/.nimble/bin" >> $GITHUB_PATH
 
-      - name: Install dependencies + Build Arturo (full)
-        if: matrix.version == 'full'
-        shell: msys2 {0}
-        run: |
-          pacman --noconfirm -S p7zip mingw-w64-x86_64-toolchain
-          mkdir dist
-          mkdir nim
-          curl -L https://nim-lang.org/download/dlls.zip -o dist/dlls.zip
-          curl -L https://arturo-lang.s3.amazonaws.com/extra-dlls.zip -o dist/extradlls.zip
-          curl -L https://nim-lang.org/download/nim-1.6.8_x64.zip -o dist/nim.zip
-          7z x dist/dlls.zip -obin
-          7z x dist/extradlls.zip -obin
-          7z x dist/nim.zip -onim
+  #     - name: Install dependecies
+  #       run: |
+  #         sudo apt-get update -y
+  #         sudo apt-get install -y uglifyjs
 
-          cp src/extras/webview/deps/dlls/x64/*.dll bin
+  #     - name: Verify dependecies
+  #       run: |
+  #         nim --version
 
-          export PATH="${{ github.workspace }}/nim/nim-1.6.8/bin":$PATH
+  #     - name: Build Arturo
+  #       run: |
+  #         ./build.nims --mode web --install --log
+  #         echo "$HOME/.arturo/bin" >> $GITHUB_PATH
 
-          nim --version
+  #     - name: Create artifact
+  #       run: |
+  #         cp bin/${{ env.app-name }}.js ../
+  #         tar czf ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{ steps.currentDate.outputs.text }}-Web-${{matrix.version}}.tar.gz ${{ env.app-name }}.js README.md LICENSE
 
-          ./build.nims install ${{ matrix.version }} log
-
-      - name: Install dependencies + Build Arturo (mini)
-        if: matrix.version == 'mini'
-        shell: msys2 {0}
-        run: |
-          pacman --noconfirm -S p7zip mingw-w64-x86_64-toolchain
-          mkdir dist
-          mkdir nim
-          curl -L https://nim-lang.org/download/dlls.zip -o dist/dlls.zip
-          curl -L https://nim-lang.org/download/nim-1.6.8_x64.zip -o dist/nim.zip
-          7z x dist/dlls.zip -obin
-          7z x dist/nim.zip -onim
-
-          export PATH="${{ github.workspace }}/nim/nim-1.6.8/bin":$PATH
-
-          ./build.nims install ${{ matrix.version }} log
-
-      - name: Create artifact (full)
-        if: matrix.version == 'full'
-        run: |
-          mkdir arturo-${{matrix.version}}-${{matrix.os}}
-
-          curl -L https://arturo-lang.s3.amazonaws.com/libcrypto-1_1-x64.dll -o libcrypto-1_1-x64.dll
-          curl -L https://arturo-lang.s3.amazonaws.com/libssl-1_1-x64.dll -o libssl-1_1-x64.dll
-          curl -L https://arturo-lang.s3.amazonaws.com/pcre64.dll -o pcre64.dll
-          curl -L https://arturo-lang.s3.amazonaws.com/sqlite3_64.dll -o sqlite3_64.dll
-          curl -L https://arturo-lang.s3.amazonaws.com/libgmp-10.dll -o libgmp-10.dll
-
-          cp *.dll arturo-${{matrix.version}}-${{matrix.os}}
-          cp src/extras/webview/deps/dlls/x64/webview.dll arturo-${{matrix.version}}-${{matrix.os}}
-          cp src/extras/webview/deps/dlls/x64/WebView2Loader.dll arturo-${{matrix.version}}-${{matrix.os}}
-
-          cp bin/arturo.exe arturo-${{matrix.version}}-${{matrix.os}}
-          cp README.md arturo-${{matrix.version}}-${{matrix.os}}
-          cp LICENSE arturo-${{matrix.version}}-${{matrix.os}}
-          cp *.dll arturo-${{matrix.version}}-${{matrix.os}}
-
-      - name: Create artifact (mini)
-        if: matrix.version == 'mini'
-        run: |
-          mkdir arturo-${{matrix.version}}-${{matrix.os}}
-
-          curl -L https://arturo-lang.s3.amazonaws.com/libcrypto-1_1-x64.dll -o libcrypto-1_1-x64.dll
-          curl -L https://arturo-lang.s3.amazonaws.com/libssl-1_1-x64.dll -o libssl-1_1-x64.dll
-          curl -L https://arturo-lang.s3.amazonaws.com/pcre64.dll -o pcre64.dll
-
-          cp *.dll arturo-${{matrix.version}}-${{matrix.os}}
-
-          cp bin/arturo.exe arturo-${{matrix.version}}-${{matrix.os}}
-          cp README.md arturo-${{matrix.version}}-${{matrix.os}}
-          cp LICENSE arturo-${{matrix.version}}-${{matrix.os}}
-          cp *.dll arturo-${{matrix.version}}-${{matrix.os}}
-
-      - name: Package artifact
-        run: |
-          tar czf ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{ steps.currentDate.outputs.text }}-WindowsMsys2-${{matrix.version}}.tar.gz arturo-${{matrix.version}}-${{matrix.os}}/*
-
-      - name: Upload Artifact
-        uses: 'actions/upload-artifact@v1'
-        with:
-          name: ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{ steps.currentDate.outputs.text }}-WindowsMsys2-${{matrix.version}}.tar.gz
-          path: ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{ steps.currentDate.outputs.text }}-WindowsMsys2-${{matrix.version}}.tar.gz
-
-  web:
-    name: "Package Web"
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os:
-          - ubuntu-latest
-        version:
-          - mini
-
-    steps:
-      - name: "Cancel similar actions in progress"
-        uses: styfle/cancel-workflow-action@0.6.0
-        with:
-          access_token: ${{ github.token }}
-
-      - name: "Checkout"
-        uses: actions/checkout@main
-        with:
-          repository: arturo-lang/arturo
-          submodules: recursive
-
-      - name: "Get version"
-        uses: pCYSl5EDgo/cat@master
-        id: versionNumber
-        with:
-          path: version/version
-          trim: true
-
-      - name: Get current date
-        run: echo $(date -u "+%F") >> currentDate
-
-      - name: "Read date"
-        uses: pCYSl5EDgo/cat@master
-        id: currentDate
-        with:
-          path: currentDate
-          trim: true
-
-      - name: Install Nim
-        run: |
-          wget -qO - https://nim-lang.org/choosenim/init.sh | bash -s -- -y
-          echo "$HOME/.nimble/bin" >> $GITHUB_PATH
-
-      - name: Install dependecies
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y uglifyjs
-
-      - name: Verify dependecies
-        run: |
-          nim --version
-
-      - name: Build Arturo
-        run: |
-          ./build.nims install web
-          echo "$HOME/.arturo/bin" >> $GITHUB_PATH
-
-      - name: Create artifact
-        run: |
-          install -m 0755 ./bin/${{ env.app-name }}.js .
-          tar czf ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{ steps.currentDate.outputs.text }}-Web-${{matrix.version}}.tar.gz ${{ env.app-name }}.js README.md LICENSE
-
-      - name: Upload Artifact
-        uses: 'actions/upload-artifact@v1'
-        with:
-          name: ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{ steps.currentDate.outputs.text }}-Web-${{matrix.version}}.tar.gz
-          path: ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{ steps.currentDate.outputs.text }}-Web-${{matrix.version}}.tar.gz
+  #     - name: Upload Artifact
+  #       uses: 'actions/upload-artifact@v1'
+  #       with:
+  #         name: ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{ steps.currentDate.outputs.text }}-Web-${{matrix.version}}.tar.gz
+  #         path: ${{ env.app-name }}-${{ steps.versionNumber.outputs.text }}-${{ steps.currentDate.outputs.text }}-Web-${{matrix.version}}.tar.gz
 
   upload:
     name: "Upload"
@@ -562,11 +349,10 @@ jobs:
     if: ${{ always() }}
     needs:
       - unix
-      - raspberry
       - freebsd
       - windows
-      - msys2
-      - web
+      # - msys2
+      # - web
     steps:
       - name: "Cancel similar actions in progress"
         uses: styfle/cancel-workflow-action@0.6.0
