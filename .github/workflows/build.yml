@@ -28,11 +28,11 @@ jobs:
     strategy:
       matrix:
         os:
-          # - ubuntu-latest
+          - ubuntu-latest
           - macos-latest
         version:
           - mini
-          # - full
+          - full
 
     steps:
       - name: "Cancel similar actions in progress"
@@ -73,11 +73,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install libwebkit2gtk-4.0-dev libmpfr-dev
-
-      - name: Install dependencies (macos)
-        if: matrix.version == 'full' && matrix.os == 'ubuntu-latest'
-        run: |
-          sudo brew install gmp
 
       - name: Verify dependecies
         run: |
