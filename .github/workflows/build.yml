@@ -28,11 +28,11 @@ jobs:
     strategy:
       matrix:
         os:
-          - ubuntu-latest
+          # - ubuntu-latest
           - macos-latest
         version:
           - mini
-          - full
+          # - full
 
     steps:
       - name: "Cancel similar actions in progress"
