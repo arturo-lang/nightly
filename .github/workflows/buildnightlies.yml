@@ -125,4 +125,15 @@ jobs:
         runs-on: ubuntu-latest
         if: (github.event_name == 'schedule' ) || (github.event_name == 'workflow_dispatch')
         needs:
-          - build
+            - build
+        steps:
+            - name: Get current date
+              run: echo $(date -u "+%F") >> currentDate
+              shell: bash
+    
+            - name: "Read date"
+              uses: pCYSl5EDgo/cat@master
+              id: currentDate
+              with:
+                path: currentDate
+                trim: true
