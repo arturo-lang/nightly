@@ -122,9 +122,16 @@ jobs:
                 trim: true
             
             - name: Download existing artifacts
-              uses: actions/download-artifact@v2
+              uses: actions/download-artifact@v4
               with:
+                merge-multiple: true
+                github-token: ${{ secrets.GITHUB_TOKEN }}
                 path: ./assets
+  
+            - name: Debug environment
+              run: |
+                ls -laR ./assets
+              shell: bash
 
             - name: Upload release assets
               run: |
