@@ -3,12 +3,16 @@ name: Build Nightlies
 on:
     push:
         branches:
+            - 'master'
+            - 'actions'
+        tags-ignore:
             - '**'
-            - actions
-
     pull_request:
-        branches:
-            - '*'
+        paths-ignore:
+            - 'docs/*'
+            - '*.yml'
+            - '*.md'
+            - 'LICENSE'
 
     schedule:
         - cron: '0 0 * * *'
