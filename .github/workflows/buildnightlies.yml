@@ -110,6 +110,8 @@ jobs:
         needs:
             - build
         steps:
+            - uses: actions/checkout@v4
+            
             - name: Get current date
               run: echo $(date -u "+%F") >> currentDate
               shell: bash
