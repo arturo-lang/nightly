@@ -1,0 +1,134 @@
+name: Build Nightlies
+
+on:
+    push:
+        branches:
+            - 'master'
+            - 'actions'
+        tags-ignore:
+            - '**'
+    pull_request:
+        paths-ignore:
+            - 'docs/*'
+            - '*.yml'
+            - '*.md'
+            - 'LICENSE'
+
+    schedule:
+        - cron: '0 0 * * *'
+
+    workflow_dispatch:
+
+concurrency: 
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    build:
+        runs-on: ${{ matrix.os }}
+        strategy:
+            matrix:
+                include: 
+                    - {name: "Linux (amd64 / full)",    os: ubuntu-latest,   arch: amd64, mode: full, shell: bash}
+                    - {name: "Linux (amd64 / safe)",    os: ubuntu-latest,   arch: amd64, mode: safe, shell: bash}
+                    - {name: "Linux (amd64 / mini)",    os: ubuntu-latest,   arch: amd64, mode: mini, shell: bash}
+                    - {name: "Linux (arm64 / mini)",    os: ubuntu-latest,   arch: arm64, mode: mini, shell: bash}
+                    - {name: "JS (web / mini)",         os: ubuntu-latest,   arch: amd64, mode: web,  shell: bash}
+                    - {name: "Windows (amd64 / full)",  os: windows-latest,  arch: amd64, mode: full, shell: "msys2 {0}"}
+                    - {name: "Windows (amd64 / mini)",  os: windows-latest,  arch: amd64, mode: mini, shell: "msys2 {0}"}
+                    - {name: "macOS (amd64 / full)",    os: macos-13,        arch: amd64, mode: full, shell: bash}
+                    - {name: "macOS (amd64 / mini)",    os: macos-13,        arch: amd64, mode: mini, shell: bash}
+                    - {name: "macOS (arm64 / full)",    os: macos-latest,    arch: arm64, mode: full, shell: bash}
+                    - {name: "macOS (arm64 / mini)",    os: macos-latest,    arch: arm64, mode: mini, shell: bash}
+
+        name: ${{ matrix.name }}
+        defaults:
+            run:
+                shell: ${{ matrix.shell }}
+        steps:
+            - name: Get current date
+              run: echo $(date -u "+%F") >> currentDate
+              shell: bash
+    
+            - name: "Read date"
+              uses: pCYSl5EDgo/cat@master
+              id: currentDate
+              with:
+                path: currentDate
+                trim: true
+
+            - name: Install Arturo
+              uses: arturo-lang/arturo-action@main
+              with: 
+                token: ${{ secrets.GITHUB_TOKEN }}
+                mode: ${{ matrix.mode }}
+                arch: ${{ matrix.arch }}
+                metadata: nightly.${{ steps.currentDate.outputs.text }}
+
+            - name: Prepare artifact
+              id: artifact-details
+              run: |
+                binary_path="arturo/bin/arturo"
+
+                artifact_os="macos"
+                artifact_arch="${{matrix.arch}}"
+                artifact_mode="${{matrix.mode}}"
+
+                if [ "${{matrix.os}}" = "windows-latest" ]; then
+                    artifact_os="windows"
+                    binary_path="${binary_path}.exe"
+                fi
+                if [ "${{matrix.os}}" = "ubuntu-latest" ]; then
+                    artifact_os="linux"
+                    if [ "${{matrix.mode}}" = "web" ]; then
+                        artifact_os="js"
+                        artifact_arch="web"
+                        artifact_mode="mini"
+                        binary_path="${binary_path}.js"
+                    fi
+                fi
+
+                cd arturo
+                git_stamp="nightly.${{ steps.currentDate.outputs.text }}"
+                cd ..
+
+                artifact_name="arturo-${git_stamp}-${artifact_arch}-${artifact_os}-${artifact_mode}"
+
+                echo "BINARY_PATH=$binary_path" >> "$GITHUB_OUTPUT"
+                echo "ARTIFACT_NAME=$artifact_name" >> "$GITHUB_OUTPUT"
+
+            - name: Upload artifact
+              uses: 'actions/upload-artifact@v4'
+              with:
+                name: ${{ steps.artifact-details.outputs.ARTIFACT_NAME }}
+                path: ${{ steps.artifact-details.outputs.BINARY_PATH }}
+    
+    release:
+        name: "Release"
+        runs-on: ubuntu-latest
+        if: (github.event_name == 'schedule' ) || (github.event_name == 'workflow_dispatch')
+        needs:
+            - build
+        steps:
+            - name: Get current date
+              run: echo $(date -u "+%F") >> currentDate
+              shell: bash
+    
+            - name: "Read date"
+              uses: pCYSl5EDgo/cat@master
+              id: currentDate
+              with:
+                path: currentDate
+                trim: true
+            
+            - name: Download existing artifacts
+              uses: actions/download-artifact@v2
+              with:
+                path: ./assets
+
+            - name: Upload release assets
+              run: |
+                gh release create ${{ steps.currentDate.outputs.text }} "" ./assets/*
+              env:
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              shell: bash
