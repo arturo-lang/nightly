@@ -120,3 +120,15 @@ jobs:
               with:
                 path: currentDate
                 trim: true
+            
+            - name: Download existing artifacts
+              uses: actions/download-artifact@v2
+              with:
+                path: ./assets
+
+            - name: Upload release assets
+              run: |
+                gh release create ${{ steps.currentDate.outputs.text }} "" ./assets/*
+              env:
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              shell: bash
