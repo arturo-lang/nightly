@@ -124,7 +124,7 @@ jobs:
                 trim: true
             
             - name: Download existing artifacts
-              uses: dawidd6/action-download-artifact
+              uses: dawidd6/action-download-artifact@v6
               with:
                 github_token: ${{ secrets.GITHUB_TOKEN }}
                 skip_unpack: true
