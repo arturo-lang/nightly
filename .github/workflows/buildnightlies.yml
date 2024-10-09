@@ -124,7 +124,6 @@ jobs:
             - name: Download existing artifacts
               uses: actions/download-artifact@v4
               with:
-                merge-multiple: true
                 github-token: ${{ secrets.GITHUB_TOKEN }}
                 path: ./assets
   
@@ -135,7 +134,8 @@ jobs:
 
             - name: Upload release assets
               run: |
-                gh release create ${{ steps.currentDate.outputs.text }} "" ./assets/*
+                DESC=""
+                gh release create "${{ steps.currentDate.outputs.text }}" $DESC ./assets/*
               env:
                 GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               shell: bash
