@@ -138,7 +138,7 @@ jobs:
             - name: Upload release assets
               run: |
                 DESC=""
-                gh release create "Nightly @ ${{ steps.currentDate.outputs.text }}" $DESC ./assets/*
+                gh release create "${{ steps.currentDate.outputs.text }}" $DESC ./assets/*
               env:
                 GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               shell: bash
