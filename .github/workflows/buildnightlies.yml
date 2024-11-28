@@ -111,6 +111,8 @@ jobs:
                 cd arturo
                 git_stamp="nightly.${{ steps.currentDate.outputs.text }}"
 
+                rm bin/placeholder
+
                 if [ "${{matrix.mode}}" = "full" ]; then
                   cp src/extras/webview/deps/dlls/x64/webview.dll bin
                   cp src/extras/webview/deps/dlls/x64/WebView2Loader.dll bin
