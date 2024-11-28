@@ -67,7 +67,7 @@ jobs:
 
             - name: Prepare artifact
               id: artifact-details
-              if: ${{matrix.os}} != "windows-latest"
+              if: matrix.os != 'windows-latest'
               run: |
                 binary_path="arturo/bin/arturo"
 
@@ -100,7 +100,7 @@ jobs:
 
             - name: Prepare artifact (Windows)
               id: artifact-details-win
-              if: ${{matrix.os}} == "windows-latest"
+              if: matrix.os == 'windows-latest'
               run: |
                 binary_path="arturo/bin"
 
@@ -136,14 +136,14 @@ jobs:
 
             - name: Upload artifact
               uses: 'actions/upload-artifact@v4'
-              if: ${{matrix.os}} != "windows-latest"
+              if: matrix.os != 'windows-latest'
               with:
                 name: ${{ steps.artifact-details.outputs.ARTIFACT_NAME }}
                 path: ${{ steps.artifact-details.outputs.BINARY_PATH }}
             
             - name: Upload artifact (Windows)
               uses: 'actions/upload-artifact@v4'
-              if: ${{matrix.os}} == "windows-latest"
+              if: matrix.os == 'windows-latest'
               with:
                 name: ${{ steps.artifact-details-win.outputs.ARTIFACT_NAME }}
                 path: ${{ steps.artifact-details-win.outputs.BINARY_PATH }}
