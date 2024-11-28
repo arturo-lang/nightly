@@ -67,6 +67,7 @@ jobs:
 
             - name: Prepare artifact
               id: artifact-details
+              if: ${{matrix.os}} != "windows-latest"
               run: |
                 binary_path="arturo/bin/arturo"
 
@@ -97,11 +98,55 @@ jobs:
                 echo "BINARY_PATH=$binary_path" >> "$GITHUB_OUTPUT"
                 echo "ARTIFACT_NAME=$artifact_name" >> "$GITHUB_OUTPUT"
 
+            - name: Prepare artifact (Windows)
+              id: artifact-details-win
+              if: ${{matrix.os}} == "windows-latest"
+              run: |
+                binary_path="arturo/bin"
+
+                artifact_os="windows"
+                artifact_arch="${{matrix.arch}}"
+                artifact_mode="${{matrix.mode}}"
+
+                cd arturo
+                git_stamp="nightly.${{ steps.currentDate.outputs.text }}"
+
+                if [ "${{matrix.mode}}" = "full" ]; then
+                  cp src/extras/webview/deps/dlls/x64/webview.dll bin
+                  cp src/extras/webview/deps/dlls/x64/WebView2Loader.dll bin
+                  curl -L https://arturo-lang.s3.amazonaws.com/libgmp-10.dll -o libgmp-10.dll
+                  curl -L https://arturo-lang.s3.amazonaws.com/libmpfr-6.dll -o libmpfr-6.dll
+                  curl -L https://arturo-lang.s3.amazonaws.com/sqlite3_64.dll -o sqlite3_64.dll
+                  curl -L https://arturo-lang.s3.amazonaws.com/libgcc_s_seh-1.dll -o libgcc_s_seh-1.dll
+                fi
+
+                curl -L https://arturo-lang.s3.amazonaws.com/libwinpthread-1.dll -o libwinpthread-1.dll
+                curl -L https://arturo-lang.s3.amazonaws.com/pcre64.dll -o pcre64.dll
+                curl -L https://curl.se/ca/cacert.pem -o cacert.pem
+
+                cp *.dll bin
+                cp *.pem bin
+
+                cd ..
+
+                artifact_name="arturo-${git_stamp}-${artifact_arch}-${artifact_os}-${artifact_mode}"
+
+                echo "BINARY_PATH=$binary_path" >> "$GITHUB_OUTPUT"
+                echo "ARTIFACT_NAME=$artifact_name" >> "$GITHUB_OUTPUT"
+
             - name: Upload artifact
               uses: 'actions/upload-artifact@v4'
+              if: ${{matrix.os}} != "windows-latest"
               with:
                 name: ${{ steps.artifact-details.outputs.ARTIFACT_NAME }}
                 path: ${{ steps.artifact-details.outputs.BINARY_PATH }}
+            
+            - name: Upload artifact (Windows)
+              uses: 'actions/upload-artifact@v4'
+              if: ${{matrix.os}} == "windows-latest"
+              with:
+                name: ${{ steps.artifact-details-win.outputs.ARTIFACT_NAME }}
+                path: ${{ steps.artifact-details-win.outputs.BINARY_PATH }}
     
     release:
         name: "Release"
