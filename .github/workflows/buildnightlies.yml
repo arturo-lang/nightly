@@ -1,4 +1,4 @@
-name: Build Nightlies
+name: Build
  
 on:
     push:
@@ -33,7 +33,7 @@ jobs:
               id: get-date
               run: echo "date=$(date -u '+%F')" >> $GITHUB_OUTPUT
 
-    build:
+    nightly:
         needs: prepare
         runs-on: ${{ 
             (matrix.os == 'linux' && matrix.webkit == '40')     && 'ubuntu-22.04'   || 
