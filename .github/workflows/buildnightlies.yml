@@ -77,7 +77,7 @@ jobs:
                 create_artifact: 'true'
                 artifact_version: nightly.${{ needs.prepare.outputs.date }}
                 src: "dissect-webkit2gtk-issue"
-    
+
     release:
         name: Release
         runs-on: ubuntu-latest
