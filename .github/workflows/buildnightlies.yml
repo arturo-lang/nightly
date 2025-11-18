@@ -24,7 +24,17 @@ concurrency:
     cancel-in-progress: true
 
 jobs:
+    prepare:
+        runs-on: ubuntu-latest
+        outputs:
+            date: ${{ steps.get-date.outputs.date }}
+        steps:
+            - name: Get current date
+              id: get-date
+              run: echo "date=$(date -u '+%F')" >> $GITHUB_OUTPUT
+
     build:
+        needs: prepare
         runs-on: ${{ 
             (matrix.os == 'linux' && matrix.webkit == '40')     && 'ubuntu-22.04'   || 
             (matrix.os == 'macos' && matrix.arch == 'arm64')    && 'macos-latest'   || 
@@ -56,17 +66,6 @@ jobs:
                                                 'bash'        }}
 
         steps:
-            - name: Get current date
-              run: echo $(date -u "+%F") >> currentDate
-              shell: bash
-    
-            - name: Read date
-              uses: pCYSl5EDgo/cat@master
-              id: currentDate
-              with:
-                path: currentDate
-                trim: true
-
             - name: Install Arturo
               uses: arturo-lang/arturo-action@main
               with: 
@@ -74,29 +73,19 @@ jobs:
                 os: ${{ matrix.os }}
                 arch: ${{ matrix.arch }}
                 mode: ${{ matrix.mode }}
-                metadata: nightly.${{ steps.currentDate.outputs.text }}
+                metadata: nightly.${{ needs.prepare.outputs.date }}
                 create_artifact: 'true'
-                artifact_version: nightly.${{ steps.currentDate.outputs.text }}
+                artifact_version: nightly.${{ needs.prepare.outputs.date }}
     
     release:
         name: Release
         runs-on: ubuntu-latest
         if: (github.event_name == 'schedule') || (github.event_name == 'workflow_dispatch')
         needs:
+            - prepare
             - build
         steps:
             - uses: actions/checkout@v4
-            
-            - name: Get current date
-              run: echo $(date -u "+%F") >> currentDate
-              shell: bash
-    
-            - name: Read date
-              uses: pCYSl5EDgo/cat@master
-              id: currentDate
-              with:
-                path: currentDate
-                trim: true
             
             - name: Download existing artifacts
               uses: dawidd6/action-download-artifact@v6
@@ -108,12 +97,10 @@ jobs:
             - name: Debug environment
               run: |
                 ls -laR ./assets
-              shell: bash
 
             - name: Upload release assets
               run: |
                 DESC=""
-                gh release create "${{ steps.currentDate.outputs.text }}" $DESC ./assets/*
+                gh release create "${{ needs.prepare.outputs.date }}" $DESC ./assets/*
               env:
                 GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              shell: bash
