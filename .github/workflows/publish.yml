@@ -1,4 +1,4 @@
-name: Build
+name: Nightly
  
 on:
     push:
@@ -24,7 +24,7 @@ concurrency:
     cancel-in-progress: true
 
 jobs:
-    prepare:
+    Prepare:
         runs-on: ubuntu-latest
         outputs:
             date: ${{ steps.get-date.outputs.date }}
@@ -33,8 +33,8 @@ jobs:
               id: get-date
               run: echo "date=$(date -u '+%Y%m%d')" >> $GITHUB_OUTPUT
 
-    nightly:
-        needs: prepare
+    Build:
+        needs: Prepare
         runs-on: ${{ 
             (matrix.os == 'linux')   && (matrix.webkit == '40' && (matrix.arch == 'arm64' && 'ubuntu-22.04-arm' || 'ubuntu-22.04') || matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest') ||
             (matrix.os == 'macos')   && (matrix.arch == 'arm64' && 'macos-latest' || 'macOS-15-intel') ||
@@ -76,15 +76,14 @@ jobs:
                 os: ${{ matrix.os }}
                 arch: ${{ matrix.arch }}
                 mode: ${{ matrix.mode }}
-                metadata: nightly.${{ needs.prepare.outputs.date }}
+                metadata: nightly.${{ needs.Prepare.outputs.date }}
                 create_artifact: 'true'
-                artifact_version: nightly.${{ needs.prepare.outputs.date }}
+                artifact_version: nightly.${{ needs.Prepare.outputs.date }}
 
-    release:
-        name: Release
+    Release:
         runs-on: ubuntu-latest
         if: (github.event_name == 'schedule') || (github.event_name == 'workflow_dispatch')
-        needs: nightly
+        needs: Build
         steps:
             - uses: actions/checkout@v4
             
@@ -102,6 +101,6 @@ jobs:
             - name: Upload release assets
               run: |
                 DESC=""
-                gh release create "${{ needs.prepare.outputs.date }}" $DESC ./assets/*
+                gh release create "${{ needs.Prepare.outputs.date }}" $DESC ./assets/*
               env:
                 GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
