@@ -83,7 +83,9 @@ jobs:
     Release:
         runs-on: ubuntu-latest
         if: (github.event_name == 'schedule') || (github.event_name == 'workflow_dispatch')
-        needs: Build
+        needs: 
+            - Prepare
+            - Build
         steps:
             - uses: actions/checkout@v4
             
