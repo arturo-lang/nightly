@@ -45,7 +45,7 @@ jobs:
             matrix:
                 include: 
                     - {os: linux,   arch: amd64, mode: full}
-                    - {os: Linux,   arch: amd64, mode: full, webkit: "40"}
+                    - {os: linux,   arch: amd64, mode: full, webkit: "40"}
                     - {os: linux,   arch: amd64, mode: safe}
                     - {os: linux,   arch: amd64, mode: mini}
                     - {os: linux,   arch: arm64, mode: mini}
@@ -83,9 +83,7 @@ jobs:
         name: Release
         runs-on: ubuntu-latest
         if: (github.event_name == 'schedule') || (github.event_name == 'workflow_dispatch')
-        needs:
-            - prepare
-            - nightly
+        needs: nightly
         steps:
             - uses: actions/checkout@v4
             
