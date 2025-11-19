@@ -79,7 +79,6 @@ jobs:
                 metadata: nightly.${{ needs.prepare.outputs.date }}
                 create_artifact: 'true'
                 artifact_version: nightly.${{ needs.prepare.outputs.date }}
-                src: "dissect-webkit2gtk-issue"
 
     release:
         name: Release
