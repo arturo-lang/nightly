@@ -85,7 +85,7 @@ jobs:
         if: (github.event_name == 'schedule') || (github.event_name == 'workflow_dispatch')
         needs:
             - prepare
-            - build
+            - nightly
         steps:
             - uses: actions/checkout@v4
             
