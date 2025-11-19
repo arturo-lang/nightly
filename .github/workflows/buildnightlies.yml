@@ -31,7 +31,7 @@ jobs:
         steps:
             - name: Get current date
               id: get-date
-              run: echo "date=$(date -u '+%F')" >> $GITHUB_OUTPUT
+              run: echo "date=$(date -u '+%Y%m%d')" >> $GITHUB_OUTPUT
 
     nightly:
         needs: prepare
