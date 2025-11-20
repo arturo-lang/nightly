@@ -99,22 +99,13 @@ jobs:
         steps:
             - uses: actions/checkout@v4
             
-            - name: Download existing artifacts
-              uses: actions/download-artifact@v4
+            - name: Download artifacts
+              uses: dawidd6/action-download-artifact@v11
               with:
-                  path: ./artifacts
-
-            - name: Debug artifacts structure
-              run: |
-                  echo "=== Artifacts directory structure ==="
-                  ls -laR ./artifacts/
-                  echo "=== Looking for archives ==="
-                  find ./artifacts -type f
-
-            - name: Prepare release assets
-              run: |
-                  mkdir -p ./assets
-                  find ./artifacts -type f \( -name "*.tar.gz" -o -name "*.zip" \) -exec cp {} ./assets/ \;
+                github_token: ${{ secrets.GITHUB_TOKEN }}
+                run_id: ${{ github.run_id }}
+                path: ./assets
+                skip_unpack: true
 
             - name: Create source archive
               run: |
