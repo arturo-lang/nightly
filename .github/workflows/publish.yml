@@ -102,9 +102,13 @@ jobs:
             - name: Download existing artifacts
               uses: actions/download-artifact@v4
               with:
-                path: ./assets
-                pattern: arturo-${{ needs.Prepare.outputs.version }}*
-                merge-multiple: true
+                  path: ./artifacts
+                  pattern: arturo-${{ needs.Prepare.outputs.version }}*
+
+            - name: Prepare release assets
+              run: |
+                  mkdir -p ./assets
+                  find ./artifacts -type f \( -name "*.tar.gz" -o -name "*.zip" \) -exec cp {} ./assets/ \;
 
             - name: Create source archive
               run: |
