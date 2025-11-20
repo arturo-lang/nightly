@@ -37,8 +37,8 @@ jobs:
             - name: Prepare metadata
               id: metadata
               run: |
-                echo "date=$(date -u '+%Y%m%d')" >> $GITHUB_OUTPUT
-                echo "date_hyphenated=$(date -u '+%Y-%m-%d')" >> $GITHUB_OUTPUT
+                echo "date=$(date -u -d 'yesterday' '+%Y%m%d')" >> $GITHUB_OUTPUT
+                echo "date_hyphenated=$(date -u -d 'yesterday' '+%Y-%m-%d')" >> $GITHUB_OUTPUT
                 echo "git_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
                 echo "commit_title=$(git log -1 --pretty=format:'%s')" >> $GITHUB_OUTPUT
 
