@@ -45,7 +45,7 @@ jobs:
     Build:
         needs: Prepare
         runs-on: ${{ 
-            (matrix.os == 'linux')   && (matrix.webkit == '40' && (matrix.arch == 'arm64' && 'ubuntu-22.04-arm' || 'ubuntu-22.04') || matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest') ||
+            (matrix.os == 'linux')   && (matrix.support == 'legacy' && (matrix.arch == 'arm64' && 'ubuntu-22.04-arm' || 'ubuntu-22.04') || matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest') ||
             (matrix.os == 'macos')   && (matrix.arch == 'arm64' && 'macos-latest' || 'macOS-15-intel') ||
             (matrix.os == 'windows') && 'windows-latest' || 
                                         'ubuntu-latest'  }}
@@ -53,22 +53,21 @@ jobs:
         strategy:
             matrix:
                 include: 
-                    - {os: linux,   arch: amd64, mode: full}
-                    - {os: linux,   arch: amd64, mode: full, webkit: "40"}
-                    - {os: linux,   arch: amd64, mode: safe}
-                    - {os: linux,   arch: amd64, mode: mini}
-                    - {os: linux,   arch: arm64, mode: full}
-                    - {os: linux,   arch: arm64, mode: full, webkit: "40"}
-                    - {os: linux,   arch: arm64, mode: mini}
-                    - {os: freebsd, arch: amd64, mode: full}
-                    - {os: freebsd, arch: amd64, mode: mini}
-                    - {os: macos,   arch: amd64, mode: full}
-                    - {os: macos,   arch: amd64, mode: mini}
-                    - {os: macos,   arch: arm64, mode: full}
-                    - {os: macos,   arch: arm64, mode: mini}
-                    - {os: windows, arch: amd64, mode: full}
-                    - {os: windows, arch: amd64, mode: mini}
-                    - {os: web}
+                    - {os: linux,   arch: amd64}
+                    - {os: linux,   arch: amd64,    support: legacy}
+                    - {os: linux,   arch: amd64,    mode: mini}
+                    - {os: linux,   arch: arm64}
+                    - {os: linux,   arch: arm64,    support: legacy}
+                    - {os: linux,   arch: arm64,    mode: mini}
+                    - {os: freebsd, arch: amd64}
+                    - {os: freebsd, arch: amd64,    mode: mini}
+                    - {os: macos,   arch: amd64}
+                    - {os: macos,   arch: amd64,    mode: mini}
+                    - {os: macos,   arch: arm64}
+                    - {os: macos,   arch: arm64,    mode: mini}
+                    - {os: windows, arch: amd64}
+                    - {os: windows, arch: amd64,    mode: mini}
+                    - {os: web,     arch: js,       mode: mini}
  
         defaults:
             run:
@@ -118,7 +117,7 @@ jobs:
 
             - name: Upload release assets
               run: |
-                BODY="**Commit:** ${{ needs.Prepare.outputs.git_sha }}
+                BODY="**Commit:** ${{ needs.Prepare.outputs.git_sha }}"
                 
                 gh release create "${{ needs.Prepare.outputs.date_hyphenated }}" \
                   --title "${{ needs.Prepare.outputs.date_hyphenated }}" \
