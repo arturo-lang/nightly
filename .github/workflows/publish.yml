@@ -85,9 +85,9 @@ jobs:
                 os: ${{ matrix.os }}
                 arch: ${{ matrix.arch }}
                 mode: ${{ matrix.mode }}
-                metadata: nightly.${{ needs.Prepare.outputs.date }}.${{ needs.Prepare.outputs.git_sha }}
+                metadata: nightly.${{ needs.Prepare.outputs.date }}
                 create_artifact: 'true'
-                artifact_version: nightly.${{ needs.Prepare.outputs.date }}.${{ needs.Prepare.outputs.git_sha }}
+                artifact_version: nightly.${{ needs.Prepare.outputs.date }}
 
     Release:
         runs-on: ubuntu-latest
@@ -112,8 +112,6 @@ jobs:
             - name: Upload release assets
               run: |
                 BODY="**Commit:** ${{ needs.Prepare.outputs.git_sha }}
-                
-                **Message:** ${{ needs.Prepare.outputs.commit_title }}"
                 
                 gh release create "${{ needs.Prepare.outputs.date_hyphenated }}" \
                   --title "${{ needs.Prepare.outputs.date_hyphenated }}" \
