@@ -84,6 +84,7 @@ jobs:
                 os: ${{ matrix.os }}
                 arch: ${{ matrix.arch }}
                 mode: ${{ matrix.mode }}
+                support: ${{ matrix.support }}
                 metadata: nightly.${{ needs.Prepare.outputs.date }}
                 create_artifact: 'true'
                 artifact_version: nightly.${{ needs.Prepare.outputs.date }}
