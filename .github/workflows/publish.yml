@@ -28,10 +28,25 @@ jobs:
         runs-on: ubuntu-latest
         outputs:
             date: ${{ steps.get-date.outputs.date }}
+            date_hyphenated: ${{ steps.get-date.outputs.date_hyphenated }}
+            git_sha: ${{ steps.get-sha.outputs.git_sha }}
+            commit_title: ${{ steps.get-commit.outputs.commit_title }}
         steps:
+            - uses: actions/checkout@v4
+            
             - name: Get current date
               id: get-date
-              run: echo "date=$(date -u '+%Y%m%d')" >> $GITHUB_OUTPUT
+              run: |
+                echo "date=$(date -u '+%Y%m%d')" >> $GITHUB_OUTPUT
+                echo "date_hyphenated=$(date -u '+%Y-%m-%d')" >> $GITHUB_OUTPUT
+            
+            - name: Get git SHA
+              id: get-sha
+              run: echo "git_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+            
+            - name: Get commit title
+              id: get-commit
+              run: echo "commit_title=$(git log -1 --pretty=format:'%s')" >> $GITHUB_OUTPUT
 
     Build:
         needs: Prepare
@@ -76,9 +91,9 @@ jobs:
                 os: ${{ matrix.os }}
                 arch: ${{ matrix.arch }}
                 mode: ${{ matrix.mode }}
-                metadata: nightly.${{ needs.Prepare.outputs.date }}
+                metadata: nightly.${{ needs.Prepare.outputs.date }}.${{ needs.Prepare.outputs.git_sha }}
                 create_artifact: 'true'
-                artifact_version: nightly.${{ needs.Prepare.outputs.date }}
+                artifact_version: nightly.${{ needs.Prepare.outputs.date }}.${{ needs.Prepare.outputs.git_sha }}
 
     Release:
         runs-on: ubuntu-latest
@@ -102,7 +117,13 @@ jobs:
 
             - name: Upload release assets
               run: |
-                DESC=""
-                gh release create "${{ needs.Prepare.outputs.date }}" $DESC ./assets/*
+                BODY="**Commit:** ${{ needs.Prepare.outputs.git_sha }}
+                
+                **Message:** ${{ needs.Prepare.outputs.commit_title }}"
+                
+                gh release create "${{ needs.Prepare.outputs.date_hyphenated }}" \
+                  --title "${{ needs.Prepare.outputs.date_hyphenated }}" \
+                  --notes "$BODY" \
+                  ./assets/*
               env:
                 GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
