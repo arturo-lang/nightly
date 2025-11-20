@@ -104,6 +104,13 @@ jobs:
                 github_token: ${{ secrets.GITHUB_TOKEN }}
                 skip_unpack: true
                 path: ./assets
+
+            - name: Create source archive
+              run: |
+                git clone --depth 1 https://github.com/arturo-lang/arturo.git arturo-source
+                cd arturo-source
+                git archive --format=zip --prefix=arturo-${{ needs.Prepare.outputs.date }}/ HEAD > ../assets/arturo-${{ needs.Prepare.outputs.date }}-source.zip
+                git archive --format=tar.gz --prefix=arturo-${{ needs.Prepare.outputs.date }}/ HEAD > ../assets/arturo-${{ needs.Prepare.outputs.date }}-source.tar.gz
   
             - name: Debug environment
               run: |
