@@ -30,17 +30,18 @@ jobs:
             date: ${{ steps.metadata.outputs.date }}
             date_hyphenated: ${{ steps.metadata.outputs.date_hyphenated }}
             git_sha: ${{ steps.metadata.outputs.git_sha }}
-            commit_title: ${{ steps.metadata.outputs.commit_title }}
+            version: ${{ steps.metadata.outputs.version }}
         steps:
             - uses: actions/checkout@v4
             
             - name: Prepare metadata
               id: metadata
               run: |
-                echo "date=$(date -u -d 'yesterday' '+%Y%m%d')" >> $GITHUB_OUTPUT
-                echo "date_hyphenated=$(date -u -d 'yesterday' '+%Y-%m-%d')" >> $GITHUB_OUTPUT
+                DATE=$(date -u '+%Y%m%d')
+                echo "date=$DATE" >> $GITHUB_OUTPUT
+                echo "date_hyphenated=$(date -u '+%Y-%m-%d')" >> $GITHUB_OUTPUT
                 echo "git_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-                echo "commit_title=$(git log -1 --pretty=format:'%s')" >> $GITHUB_OUTPUT
+                echo "version=nightly.$DATE" >> $GITHUB_OUTPUT
 
     Build:
         needs: Prepare
@@ -85,9 +86,9 @@ jobs:
                 arch: ${{ matrix.arch }}
                 mode: ${{ matrix.mode }}
                 support: ${{ matrix.support }}
-                metadata: nightly.${{ needs.Prepare.outputs.date }}
+                metadata: ${{ needs.Prepare.outputs.version }}
                 create_artifact: 'true'
-                artifact_version: nightly.${{ needs.Prepare.outputs.date }}
+                artifact_version: ${{ needs.Prepare.outputs.version }}
 
     Release:
         runs-on: ubuntu-latest
@@ -99,18 +100,19 @@ jobs:
             - uses: actions/checkout@v4
             
             - name: Download existing artifacts
-              uses: dawidd6/action-download-artifact@v6
+              uses: actions/download-artifact@v4
               with:
-                github_token: ${{ secrets.GITHUB_TOKEN }}
-                skip_unpack: true
                 path: ./assets
+                pattern: arturo-${{ needs.Prepare.outputs.version }}*
+                merge-multiple: true
 
             - name: Create source archive
               run: |
+                VERSION=${{ needs.Prepare.outputs.version }}
                 git clone --depth 1 https://github.com/arturo-lang/arturo.git arturo-source
                 cd arturo-source
-                git archive --format=zip --prefix=arturo-${{ needs.Prepare.outputs.date }}/ HEAD > ../assets/arturo-${{ needs.Prepare.outputs.date }}-src.zip
-                git archive --format=tar.gz --prefix=arturo-${{ needs.Prepare.outputs.date }}/ HEAD > ../assets/arturo-${{ needs.Prepare.outputs.date }}-src.tar.gz
+                git archive --format=zip --prefix=arturo-$VERSION/ HEAD > ../assets/arturo-$VERSION-src.zip
+                git archive --format=tar.gz --prefix=arturo-$VERSION/ HEAD > ../assets/arturo-$VERSION-src.tar.gz
   
             - name: Debug environment
               run: |
@@ -118,7 +120,7 @@ jobs:
 
             - name: Upload release assets
               run: |
-                BODY="**Commit:** ${{ needs.Prepare.outputs.git_sha }}"
+                BODY="**Commit:** ${{ needs.Prepare.outputs.git_sha }}
                 
                 gh release create "${{ needs.Prepare.outputs.date_hyphenated }}" \
                   --title "${{ needs.Prepare.outputs.date_hyphenated }}" \
