@@ -85,9 +85,9 @@ jobs:
                 os: ${{ matrix.os }}
                 arch: ${{ matrix.arch }}
                 mode: ${{ matrix.mode }}
-                metadata: nightly.${{ needs.Prepare.outputs.date }}.${{ needs.Prepare.outputs.git_sha }}
+                metadata: nightly.${{ needs.Prepare.outputs.date }}
                 create_artifact: 'true'
-                artifact_version: nightly.${{ needs.Prepare.outputs.date }}.${{ needs.Prepare.outputs.git_sha }}
+                artifact_version: nightly.${{ needs.Prepare.outputs.date }}
 
     Release:
         runs-on: ubuntu-latest
@@ -104,6 +104,13 @@ jobs:
                 github_token: ${{ secrets.GITHUB_TOKEN }}
                 skip_unpack: true
                 path: ./assets
+
+            - name: Create source archive
+              run: |
+                git clone --depth 1 https://github.com/arturo-lang/arturo.git arturo-source
+                cd arturo-source
+                git archive --format=zip --prefix=arturo-${{ needs.Prepare.outputs.date }}/ HEAD > ../assets/arturo-${{ needs.Prepare.outputs.date }}-src.zip
+                git archive --format=tar.gz --prefix=arturo-${{ needs.Prepare.outputs.date }}/ HEAD > ../assets/arturo-${{ needs.Prepare.outputs.date }}-src.tar.gz
   
             - name: Debug environment
               run: |
@@ -112,8 +119,6 @@ jobs:
             - name: Upload release assets
               run: |
                 BODY="**Commit:** ${{ needs.Prepare.outputs.git_sha }}
-                
-                **Message:** ${{ needs.Prepare.outputs.commit_title }}"
                 
                 gh release create "${{ needs.Prepare.outputs.date_hyphenated }}" \
                   --title "${{ needs.Prepare.outputs.date_hyphenated }}" \
