@@ -40,8 +40,14 @@ jobs:
                 DATE=$(date -u -d 'yesterday' '+%Y%m%d')
                 echo "date=$DATE" >> $GITHUB_OUTPUT
                 echo "date_hyphenated=$(date -u -d 'yesterday' '+%Y-%m-%d')" >> $GITHUB_OUTPUT
-                echo "git_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+                
+                # Get the latest commit SHA from arturo-lang/arturo repo
+                ARTURO_SHA=$(gh api repos/arturo-lang/arturo/commits/master --jq '.sha[0:7]')
+                echo "git_sha=$ARTURO_SHA" >> $GITHUB_OUTPUT
+                
                 echo "version=nightly.$DATE" >> $GITHUB_OUTPUT
+              env:
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     Build:
         needs: Prepare
