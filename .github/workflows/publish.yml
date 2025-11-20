@@ -27,26 +27,20 @@ jobs:
     Prepare:
         runs-on: ubuntu-latest
         outputs:
-            date: ${{ steps.get-date.outputs.date }}
-            date_hyphenated: ${{ steps.get-date.outputs.date_hyphenated }}
-            git_sha: ${{ steps.get-sha.outputs.git_sha }}
-            commit_title: ${{ steps.get-commit.outputs.commit_title }}
+            date: ${{ steps.metadata.outputs.date }}
+            date_hyphenated: ${{ steps.metadata.outputs.date_hyphenated }}
+            git_sha: ${{ steps.metadata.outputs.git_sha }}
+            commit_title: ${{ steps.metadata.outputs.commit_title }}
         steps:
             - uses: actions/checkout@v4
             
-            - name: Get current date
-              id: get-date
+            - name: Prepare metadata
+              id: metadata
               run: |
                 echo "date=$(date -u '+%Y%m%d')" >> $GITHUB_OUTPUT
                 echo "date_hyphenated=$(date -u '+%Y-%m-%d')" >> $GITHUB_OUTPUT
-            
-            - name: Get git SHA
-              id: get-sha
-              run: echo "git_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-            
-            - name: Get commit title
-              id: get-commit
-              run: echo "commit_title=$(git log -1 --pretty=format:'%s')" >> $GITHUB_OUTPUT
+                echo "git_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+                echo "commit_title=$(git log -1 --pretty=format:'%s')" >> $GITHUB_OUTPUT
 
     Build:
         needs: Prepare
