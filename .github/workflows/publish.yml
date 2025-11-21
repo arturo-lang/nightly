@@ -74,7 +74,7 @@ jobs:
                     - {os: macos,   arch: arm64,    mode: mini}
                     - {os: windows, arch: amd64}
                     - {os: windows, arch: amd64,    mode: mini}
-                    - {os: web,     arch: js,       mode: mini}
+                    #- {os: web,     arch: js,       mode: mini}
  
         defaults:
             run:
@@ -87,6 +87,7 @@ jobs:
             - name: Install Arturo
               uses: arturo-lang/arturo-action@main
               with: 
+                do: compile
                 token: ${{ secrets.GITHUB_TOKEN }}
                 os: ${{ matrix.os }}
                 arch: ${{ matrix.arch }}
