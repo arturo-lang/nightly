@@ -37,9 +37,9 @@ jobs:
             - name: Prepare metadata
               id: metadata
               run: |
-                DATE=$(date -u '+%Y%m%d')
+                DATE=$(date -u -d 'yesterday' '+%Y%m%d')
                 echo "date=$DATE" >> $GITHUB_OUTPUT
-                echo "date_hyphenated=$(date -u '+%Y-%m-%d')" >> $GITHUB_OUTPUT
+                echo "date_hyphenated=$(date -u -d 'yesterday' '+%Y-%m-%d')" >> $GITHUB_OUTPUT
                 
                 # Get the latest commit SHA from arturo-lang/arturo repo
                 ARTURO_SHA=$(gh api repos/arturo-lang/arturo/commits/master --jq '.sha[0:7]')
