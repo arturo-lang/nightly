@@ -136,3 +136,11 @@ jobs:
                   ./assets/*
               env:
                 GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    Deploy:
+        uses: arturo-lang/website/.github/workflows/deploy.yml@main
+        needs: Release
+        if: (github.event_name == 'schedule') || (github.event_name == 'workflow_dispatch')
+        secrets: inherit
+        with:
+            channel: 'latest'
