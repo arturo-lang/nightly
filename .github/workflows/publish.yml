@@ -142,6 +142,8 @@ jobs:
             - name: Upload release assets
               run: |
                 BODY="**Commit:** [\`${{ needs.Prepare.outputs.git_sha }}\`](https://github.com/arturo-lang/arturo/commit/${{ needs.Prepare.outputs.git_sha }})"
+
+                gh release delete "${{ needs.Prepare.outputs.date_hyphenated }}" --yes --cleanup-tag 2>/dev/null || true
                 
                 gh release create "${{ needs.Prepare.outputs.date_hyphenated }}" \
                   --title "${{ needs.Prepare.outputs.date_hyphenated }}" \
