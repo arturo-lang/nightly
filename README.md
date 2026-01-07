@@ -4,7 +4,7 @@
 
 #### Automated nightly builds for the [Arturo programming language](https://github.com/arturo-lang/arturo).
 
-![License](https://img.shields.io/github/license/arturo-lang/nightly?style=for-the-badge) [![Build Status](https://img.shields.io/github/actions/workflow/status/arturo-lang/nightly/publish.yml?branch=main&style=for-the-badge)](https://github.com/arturo-lang/nightly/actions) 
+![License](https://img.shields.io/github/license/arturo-lang/nightly?style=for-the-badge) [![Build Status](https://img.shields.io/github/actions/workflow/status/arturo-lang/nightly/publish.yml?branch=master&style=for-the-badge)](https://github.com/arturo-lang/nightly/actions) 
 </div>
 
 ---
