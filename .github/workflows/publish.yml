@@ -18,6 +18,11 @@ on:
         - cron: '46 20 * * *'
 
     workflow_dispatch:
+        inputs:
+            custom_date:
+                description: 'Custom date (YYYY-MM-DD format, leave empty for today)'
+                required: false
+                type: string
 
 concurrency: 
     group: ${{ github.workflow }}-${{ github.ref }}
@@ -37,9 +42,17 @@ jobs:
             - name: Prepare metadata
               id: metadata
               run: |
-                DATE=$(date -u '+%Y%m%d')
+                # Use custom date if provided, otherwise use today
+                if [ -n "${{ inputs.custom_date }}" ]; then
+                  DATE_HYPHENATED="${{ inputs.custom_date }}"
+                  DATE=$(echo "$DATE_HYPHENATED" | tr -d '-')
+                else
+                  DATE=$(date -u '+%Y%m%d')
+                  DATE_HYPHENATED=$(date -u '+%Y-%m-%d')
+                fi
+                
                 echo "date=$DATE" >> $GITHUB_OUTPUT
-                echo "date_hyphenated=$(date -u '+%Y-%m-%d')" >> $GITHUB_OUTPUT
+                echo "date_hyphenated=$DATE_HYPHENATED" >> $GITHUB_OUTPUT
                 
                 # Get the latest commit SHA from arturo-lang/arturo repo
                 ARTURO_SHA=$(gh api repos/arturo-lang/arturo/commits/master --jq '.sha[0:7]')
