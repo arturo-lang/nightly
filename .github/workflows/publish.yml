@@ -37,7 +37,7 @@ jobs:
             git_sha: ${{ steps.metadata.outputs.git_sha }}
             version: ${{ steps.metadata.outputs.version }}
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
             
             - name: Prepare metadata
               id: metadata
@@ -118,10 +118,10 @@ jobs:
             - Prepare
             - Build
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
             
             - name: Download artifacts
-              uses: dawidd6/action-download-artifact@v11
+              uses: dawidd6/action-download-artifact@v24
               with:
                 github_token: ${{ secrets.GITHUB_TOKEN }}
                 run_id: ${{ github.run_id }}
