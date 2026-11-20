@@ -17,14 +17,16 @@ Visit [Releases](https://github.com/arturo-lang/nightly/releases) to download th
 
 | Platform | Architectures | Build Types |
 |----------|--------------|-------------|
-| **Linux** | amd64, arm64 | full, mini, *legacy |
+| **Linux** | amd64, arm64 | full, mini, noui, *legacy |
 | **macOS** | amd64, arm64 | full, mini |
-| **Windows** | amd64 | full, mini |
+| **Windows** | amd64, arm64 | full, mini |
 | **FreeBSD** | amd64 | full, mini |
 | **Web** | js | mini |
 
 > [!TIP]
 > **Legacy** versions are normal (= *full*) versions, only for older systems (e.g. Ubuntu 22.04, that only support WebKit 4.0, older GLIBC versions, etc)
+>
+> **No-UI** (*noui*) versions (Linux only) are full versions minus anything UI-related (`webview`, dialogs & clipboard): no GTK/WebKit needed - ideal for servers, containers & CI
 
 -----------------------------
 
