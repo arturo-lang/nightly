@@ -20,7 +20,7 @@ Visit [Releases](https://github.com/arturo-lang/nightly/releases) to download th
 | **Linux** | amd64, arm64 | full, mini, noui, *legacy |
 | **macOS** | amd64, arm64 | full, mini |
 | **Windows** | amd64, arm64 | full, mini |
-| **FreeBSD** | amd64 | full, mini |
+| **FreeBSD** | amd64, arm64 | full, mini |
 | **Web** | js | mini |
 
 > [!TIP]
