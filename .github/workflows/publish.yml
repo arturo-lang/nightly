@@ -113,6 +113,7 @@ jobs:
                 arch: ${{ matrix.arch }}
                 mode: ${{ matrix.mode }}
                 support: ${{ matrix.support }}
+                src: ${{ matrix.os == 'wasi' && 'wasi-build' || '' }}
                 metadata: ${{ needs.Prepare.outputs.version }}
                 create_artifact: 'true'
                 artifact_version: ${{ needs.Prepare.outputs.version }}
