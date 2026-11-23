@@ -94,6 +94,7 @@ jobs:
                     - {os: windows, arch: arm64}
                     - {os: windows, arch: arm64,    mode: mini}
                     - {os: web,     arch: js,       mode: mini}
+                    - {os: wasi,    arch: wasm32,   mode: mini}
  
         defaults:
             run:
@@ -104,7 +105,7 @@ jobs:
 
         steps:
             - name: Install Arturo
-              uses: arturo-lang/setup-arturo@v2
+              uses: arturo-lang/setup-arturo@wasi
               with: 
                 do: compile
                 token: ${{ secrets.GITHUB_TOKEN }}
@@ -112,6 +113,7 @@ jobs:
                 arch: ${{ matrix.arch }}
                 mode: ${{ matrix.mode }}
                 support: ${{ matrix.support }}
+                src: ${{ matrix.os == 'wasi' && 'wasi-build' || '' }}
                 metadata: ${{ needs.Prepare.outputs.version }}
                 create_artifact: 'true'
                 artifact_version: ${{ needs.Prepare.outputs.version }}
