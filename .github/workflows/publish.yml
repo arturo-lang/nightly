@@ -105,7 +105,7 @@ jobs:
 
         steps:
             - name: Install Arturo
-              uses: arturo-lang/setup-arturo@v2
+              uses: arturo-lang/setup-arturo@wasi
               with: 
                 do: compile
                 token: ${{ secrets.GITHUB_TOKEN }}
